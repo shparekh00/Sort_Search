@@ -9,7 +9,7 @@ PRINT_STR = 4
 arr:        .space  40
 found:      .asciiz "Found at index "
 notfound:   .asciiz "Not found \n"
-newgitline:    .asciiz "\n"
+newline:    .asciiz "\n"
   
     .text
 main:
