@@ -9,8 +9,7 @@ PRINT_STR = 4
 arr:        .space  40
 found:      .asciiz "Found at index "
 notfound:   .asciiz "Not found \n"
-newline:    .asciiz "\n"
-nowsearch:  .asciiz "Enter value to search for"
+newgitline:    .asciiz "\n"
   
     .text
 main:
@@ -30,8 +29,6 @@ main:
     move        $a2, $v0            # move len to $a2, pass as argument to sort
     li          $t2, 1              # int i = 1 for while loop in sort
     jal		    sort				# jump to sort and save position to $ra
-    la		$a0, nowsearch		# 
-    li      $v0, PRINT_STR
     syscall
     move 	    $a0, $s0		    # pass arr as argument
     addiu       $a2, $a2, -1
@@ -114,31 +111,32 @@ endSort:
 
 bsearch:
 # Prologue  
-    addiu       $sp, $sp, -20       # allocate space in stack
-    sw          $ra, 16($sp)
-    sw          $a0, 20($sp)       
-    sw          $a1, 24($sp)
-    sw          $a2, 28($sp)
-    sw          $a3, 32($sp)    
+    addiu       $sp, $sp, -28       # allocate space in stack
+    sw          $ra, 24($sp)
+    sw          $a0, 28($sp)       
+    sw          $a1, 32($sp)
+    sw          $a2, 36($sp)
+    sw          $a3, 40($sp)
+        
 # Body
-    lw          $a0, 20($sp)        # load arr
+    lw          $a0, 28($sp)        # load arr
     addiu       $t0, $a0, 0         # $t0 contains address in array
-    lw          $a1, 24($sp)        # load low
-    lw          $a2, 28($sp)        # load high
-    lw          $a3, 32($sp)        # load key
+    lw          $a1, 32($sp)        # load low
+    lw          $a2, 36($sp)        # load high
+    lw          $a3, 40($sp)        # load key
     bgt		    $a1, $a2, notFound 	# if hi > low then not found
     addu        $t1, $a1, $a2       # $t1 = low + high
     srl         $t1, $t1, 1         # divide by 2 (mid)
     sll         $t2, $t1, 2         # mid * 4 to get index in arr
-    addu        $t0, $t0, $t2       
+    addu        $t0, $t0, $t2       # change address $t0 to adress mid
     lw		    $t3, 0($t0)		    # $t3 = arr[mid]
     bgt		    $t3, $a3, smallHalf	# if arr[mid] > key then smallHalf
     blt		    $t3, $a3, bigHalf	# if $t3 < $a3 then bigHalf
-    addiu       $v0, $t1, 0         # return mid
+    move        $v0, $t1         # return mid
     j		    endBsearch			# jump to endBsearch
     
 notFound:
-    addiu       $v0, $v0, -1        # return -1 if not found
+    li          $v0, -1        # return -1 if not found
     j		    endBsearch			# jump to end
 
 smallHalf:
@@ -154,8 +152,8 @@ bigHalf:
 # Epilogue    
 endBsearch:
           
-    lw		    $ra, 16($sp)   
-    addiu       $sp, $sp, 20
+    lw		    $ra, 24($sp)   
+    addiu       $sp, $sp, 28
     jr		    $ra					# jump to $ra
     
      
@@ -165,11 +163,15 @@ find:
     sw          $ra, 24($sp)
     sw          $a0, 28($sp)
     sw          $a2, 32($sp)
+    sw          $s0, 20($sp)
+    sw          $s1, 16($sp)
 # Body
     lw		    $a0, 28($sp)		# load arr
     lw		    $a2, 32($sp)		# load len - 1
-    #addiu       $a2, $a2, -1        # $a2 = len-1 (high)
     andi        $a1, $a1, 0         # $a1 = 0 (low)
+    addiu		$s0, $a1, 0		    # save low
+    lw		    $s1, 32($sp)		# 
+    
     li          $v0, READ_INT       # read key
     syscall
     bltz        $v0, endFind
@@ -186,12 +188,16 @@ find:
     la 	        $a0, newline		
     li          $v0, PRINT_STR
     syscall
-    j		    find				# jump to endFind
+    move 	    $a1, $s0		    # $a1 = $t1
+    move 	    $a2, $s1		    # $a2 = $s1
+    j		    find				# jump to find
     
 false:
     la		    $a0, notfound		    # print "not found "
     li          $v0, PRINT_STR
     syscall
+    move 	    $a1, $s0		# $a0 = s01
+    move 	    $a2, $s1		    # $a2 = $s1
     j		    find				# jump to endFind
 
 # Epilogue
